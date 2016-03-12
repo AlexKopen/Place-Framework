@@ -1,4 +1,5 @@
 <?php 
+
 class PlaceApp {
 
 	public $allRoutes = array();
@@ -21,8 +22,8 @@ class PlaceApp {
 		return $path;
 	}
 
-	function template($templateFile) {
-		$template = new Template($templateFile);
+	function render_template($templateFile, $variables = '') {
+		$template = new Template($templateFile, $variables);
 		return $template->output();
 	}
 
@@ -32,20 +33,22 @@ class PlaceApp {
 		$numTotalRoutes = sizeof($this->allRoutes);
 		$output = '';
 
-		for ($i=0; $i < $numTotalRoutes; $i++) { 
+		for ($i=0; $i < $numTotalRoutes; $i++) {
 			$currentRoute = $this->allRoutes[$i];
 
 			if ($currentRoute->name == '/' . $requestedRoute) {
 				$functionToExecute = $currentRoute->action;
-				$output = $functionToExecute();
-				echo($output);
+				$output = $functionToExecute();				
 				break;
 			}
 
 			if ($i + 1 == $numTotalRoutes) {
-				echo('Page Not Found');
+				$output = '404 Page Not Found';
+				break;
 			}
 		}
+
+		echo($output);
 	}
 
 }
@@ -64,21 +67,38 @@ class Route {
 class Template {
 
 	public $template;
+	public $variables;
 
-	function __construct($template) {
-	   $this->name = $name;
+	function __construct($template, $variables) {
+	   $this->template = $template;
+	   $this->variables = $variables;
 	}
 
 	function output() {
-		$file = fopen($template,'r');
+		$output = '';
+		$currentLine = '';
+
+		$file = fopen($this->template,'r');
 
 		while(!feof($file)) {
-			echo fgets($file). '<br />';
+			$currentLine = fgets($file);
+
+			if (strpos($currentLine, '{%') !== false) {
+				$startingPosition = strpos($currentLine, '{%');
+				$lengthOfSubstring = strlen($currentLine) - strpos($currentLine, '%}');
+
+				$arrayKey = trim(substr($currentLine, $startingPosition + 2, $lengthOfSubstring - 2));
+
+				$currentLine = str_replace('{% ' . $arrayKey . ' %}', $this->variables[$arrayKey], $currentLine);
+			}
+
+			$output .= $currentLine;
 		}
 
 		fclose($file);
-	}
 
+		return $output;
+	}
 }
 
  ?>
