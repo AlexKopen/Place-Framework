@@ -1,15 +1,13 @@
 <?php
-	require 'place.php';
+	require 'src/place.php';
 	$app = new PlaceApp();
 
 	$app->get('/', function() {
-		return 'home page';
-
+		//return ($this->app->template('templates/home.html'));
 	});
 
 	$app->get('/page', function() {
-		$testVar = 45;
-		return 'a different route with a variable - ' . $testVar;
+		return 'The /page route returned directly to the view';
 	});
 
 	$app->run();
