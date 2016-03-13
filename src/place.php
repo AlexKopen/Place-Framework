@@ -2,7 +2,20 @@
 
 class PlaceApp {
 
-	public $allRoutes = array();
+	private $allRoutes = array();
+	private $notFoundOutput = '404 Page Not Found';
+
+	function notFound($output) {
+		$this->notFoundOutput = $output();
+	}
+
+	function notFoundOutput() {
+		if (is_callable($this->notFoundOutput)){
+			return $this->notFoundOutput();
+		} else {
+			return $this->notFoundOutput;
+		}
+	}
 
 	function get($route, $action) {
 		array_push($this->allRoutes, new Route($route, $action));
@@ -27,7 +40,6 @@ class PlaceApp {
 		return $template->output();
 	}
 
-
 	function run() {
 		$requestedRoute = $this->request_path();
 		$numTotalRoutes = sizeof($this->allRoutes);
@@ -43,7 +55,7 @@ class PlaceApp {
 			}
 
 			if ($i + 1 == $numTotalRoutes) {
-				$output = '404 Page Not Found';
+				$output = $this->notFoundOutput();
 				break;
 			}
 		}
