@@ -78,8 +78,8 @@ class Route {
 
 class Template {
 
-	public $template;
-	public $variables;
+	private $template;
+	private $variables;
 
 	function __construct($template, $variables) {
 	   $this->template = $template;
@@ -88,28 +88,96 @@ class Template {
 
 	function output() {
 		$output = '';
-		$currentLine = '';
+		$fileChars = array();
 
-		$file = fopen($this->template,'r');
+		$file = fopen($this->template, 'r');
+
+		$tempLine = '';
 
 		while(!feof($file)) {
-			$currentLine = fgets($file);
-
-			if (strpos($currentLine, '{%') !== false) {
-				$startingPosition = strpos($currentLine, '{%');
-				$lengthOfSubstring = strlen($currentLine) - strpos($currentLine, '%}');
-
-				$arrayKey = trim(substr($currentLine, $startingPosition + 2, $lengthOfSubstring - 2));
-
-				$currentLine = str_replace('{% ' . $arrayKey . ' %}', $this->variables[$arrayKey], $currentLine);
+			$tempLine = fgets($file);
+			for ($i=0; $i < strlen($tempLine); $i++) { 
+				array_push($fileChars, $tempLine[$i]);
 			}
-
-			$output .= $currentLine;
 		}
 
 		fclose($file);
 
+		$fileCharSize = count($fileChars);
+		$replaceContents = array();
+		$scanning;
+		$tempValue;
+		$tempStart;
+		$tempEnd;
+
+		for ($i=0; $i < $fileCharSize; $i++) {
+
+			if ($i >= $fileCharSize - 2) {
+				break;
+			}
+
+			if ($fileChars[$i] . $fileChars[$i + 1] == '{{') {
+				$i += 2;
+				$scanning = TRUE;
+				$tempValue = '';
+				$tempStart = $i - 2;
+
+				while ($scanning == TRUE) {
+					if ($fileChars[$i + 1] . $fileChars[$i + 2] == '}}') {
+						$scanning = FALSE;
+						$tempEnd = $i + 2;
+						$i = $tempEnd;						
+
+						array_push($replaceContents, new Replace($tempStart,$tempEnd,$this->variables[trim($tempValue)]));
+
+					} else {
+						$tempValue .= $fileChars[$i++];
+
+						if ($i >= $fileCharSize) {
+							$scanning = FALSE;
+						}
+
+					}
+				}
+			}
+		}
+
+		$replacePosition = 0;
+		$currentStart = $replaceContents[$replacePosition]->start;
+		$currentEnd = $replaceContents[$replacePosition]->end;
+		$currentValue = $replaceContents[$replacePosition]->value;
+
+		for ($i=0; $i < $fileCharSize; $i++) {
+			if ($i == $currentStart) {
+				$output .= $currentValue;
+				$i = $currentEnd;
+
+				if (count($replaceContents) > $replacePosition + 1){
+					$replacePosition++;
+					$currentStart = $replaceContents[$replacePosition]->start;
+					$currentEnd = $replaceContents[$replacePosition]->end;
+					$currentValue = $replaceContents[$replacePosition]->value;
+				}
+
+			} else {
+				$output .= $fileChars[$i];
+			}
+		}
+
 		return $output;
+	}
+}
+
+class Replace {
+
+	public $start;
+	public $end;
+	public $value;
+
+	function __construct($start, $end, $value) {
+		$this->start = $start;
+		$this->end = $end;
+		$this->value = $value;
 	}
 }
 

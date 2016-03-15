@@ -3,16 +3,16 @@
 	$app = new PlaceApp();
 
 	$app->get('/', function() use($app) {
-		return $app->render_template('templates/home.html', array('var1' => 'var 1 value'));
+		return $app->render_template('templates/home.html', array('name' => 'alex kopen'));
 	});
 
 	$app->get('/page', function() use($app) {
 		return 'The /page route returned directly to the view';
 	});
 
-	$app->notFound(function() use($app) {
-		return $app->render_template('templates/404.html');
-	});
+	// $app->notFound(function() use($app) {
+	// 	return $app->render_template('templates/404.html');
+	// });
 
 	$app->run();
 
