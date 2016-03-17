@@ -1,26 +1,23 @@
-<?php 
+<?php
+// @author Alex Kopen
+
+// Dependencies
+require_once('route.php');
+require_once('template.php');
 
 class PlaceApp {
 
+	// Holds all routes
 	private $allRoutes = array();
+	// Default 404 server page
 	private $notFoundOutput = '404 Page Not Found';
 
-	function notFound($output) {
-		$this->notFoundOutput = $output();
-	}
-
-	function notFoundOutput() {
-		if (is_callable($this->notFoundOutput)){
-			return $this->notFoundOutput();
-		} else {
-			return $this->notFoundOutput;
-		}
-	}
-
+	// Creates a new route and adds said route to $allRoutes
 	function get($route, $action) {
 		array_push($this->allRoutes, new Route($route, $action));
 	}
 
+	// Determines the route requested independent of the root directory of index.php
 	function request_path() {
 		$request_uri = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
 		$script_name = explode('/', trim($_SERVER['SCRIPT_NAME'], '/'));
@@ -35,16 +32,33 @@ class PlaceApp {
 		return $path;
 	}
 
+	// Creates a new template and returns said template's processed output
 	function render_template($templateFile, $variables = '') {
 		$template = new Template($templateFile, $variables);
 		return $template->output();
 	}
 
+	// Overwrites the default 404 server page with function set by the user
+	function notFound($output) {
+		$this->notFoundOutput = $output();
+	}
+
+	// Returns the the user passed function if it exists, otherwise returns the default 404 server page
+	function notFoundOutput() {
+		if (is_callable($this->notFoundOutput)){
+			return $this->notFoundOutput();
+		} else {
+			return $this->notFoundOutput;
+		}
+	}	
+
+	// Runs the app upon request and outputs the results to the view
 	function run() {
 		$requestedRoute = $this->request_path();
 		$numTotalRoutes = sizeof($this->allRoutes);
 		$output = '';
 
+		// Determines the appropriate function to execute determined by the requested route
 		for ($i=0; $i < $numTotalRoutes; $i++) {
 			$currentRoute = $this->allRoutes[$i];
 
@@ -54,6 +68,7 @@ class PlaceApp {
 				break;
 			}
 
+			// Route requested was not found
 			if ($i + 1 == $numTotalRoutes) {
 				$output = $this->notFoundOutput();
 				break;
@@ -63,122 +78,6 @@ class PlaceApp {
 		echo($output);
 	}
 
-}
-
-class Route {
-
-	public $name;
-	public $action;
-
-	function __construct($name, $action) {
-		$this->name = $name;
-		$this->action = $action;
-	}
-}
-
-class Template {
-
-	private $template;
-	private $variables;
-
-	function __construct($template, $variables) {
-	   $this->template = $template;
-	   $this->variables = $variables;
-	}
-
-	function output() {
-		$output = '';
-		$fileChars = array();
-
-		$file = fopen($this->template, 'r');
-
-		$tempLine = '';
-
-		while(!feof($file)) {
-			$tempLine = fgets($file);
-			for ($i=0; $i < strlen($tempLine); $i++) { 
-				array_push($fileChars, $tempLine[$i]);
-			}
-		}
-
-		fclose($file);
-
-		$fileCharSize = count($fileChars);
-		$replaceContents = array();
-		$scanning;
-		$tempValue;
-		$tempStart;
-		$tempEnd;
-
-		for ($i=0; $i < $fileCharSize; $i++) {
-
-			if ($i >= $fileCharSize - 2) {
-				break;
-			}
-
-			if ($fileChars[$i] . $fileChars[$i + 1] == '{{') {
-				$i += 2;
-				$scanning = TRUE;
-				$tempValue = '';
-				$tempStart = $i - 2;
-
-				while ($scanning == TRUE) {
-					if ($fileChars[$i + 1] . $fileChars[$i + 2] == '}}') {
-						$scanning = FALSE;
-						$tempEnd = $i + 2;
-						$i = $tempEnd;						
-
-						array_push($replaceContents, new Replace($tempStart,$tempEnd,$this->variables[trim($tempValue)]));
-
-					} else {
-						$tempValue .= $fileChars[$i++];
-
-						if ($i >= $fileCharSize) {
-							$scanning = FALSE;
-						}
-
-					}
-				}
-			}
-		}
-
-		$replacePosition = 0;
-		$currentStart = $replaceContents[$replacePosition]->start;
-		$currentEnd = $replaceContents[$replacePosition]->end;
-		$currentValue = $replaceContents[$replacePosition]->value;
-
-		for ($i=0; $i < $fileCharSize; $i++) {
-			if ($i == $currentStart) {
-				$output .= $currentValue;
-				$i = $currentEnd;
-
-				if (count($replaceContents) > $replacePosition + 1){
-					$replacePosition++;
-					$currentStart = $replaceContents[$replacePosition]->start;
-					$currentEnd = $replaceContents[$replacePosition]->end;
-					$currentValue = $replaceContents[$replacePosition]->value;
-				}
-
-			} else {
-				$output .= $fileChars[$i];
-			}
-		}
-
-		return $output;
-	}
-}
-
-class Replace {
-
-	public $start;
-	public $end;
-	public $value;
-
-	function __construct($start, $end, $value) {
-		$this->start = $start;
-		$this->end = $end;
-		$this->value = $value;
-	}
 }
 
  ?>
