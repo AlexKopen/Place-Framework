@@ -2,16 +2,17 @@
 	
 	// Example Place Framework application, showcasing the core functionality
 
-	require_once('src/place.php');
+	require('lib/place.php');
 	
 	$app = new PlaceApp();
 
 	$app->get('/', function() use($app) {
 		$values = array(
+			'title' => 'Home Page',
 			'name' => 'Alex Kopen',
 			'city' => 'St. Cloud'
 		);
-		return $app->render_template('templates/home.html', $values);
+		return $app->render_template('home.html', $values);
 	});
 
 	$app->get('/page', function() use($app) {
@@ -19,7 +20,10 @@
 	});
 
 	$app->notFound(function() use($app) {
-		return $app->render_template('templates/404.html');
+		$values = array(
+			'title' => 'Page Not Found'
+		);
+		return $app->render_template('404.html', $values);
 	});
 
 	$app->run();

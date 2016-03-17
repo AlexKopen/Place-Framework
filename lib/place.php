@@ -2,8 +2,8 @@
 // @author Alex Kopen
 
 // Dependencies
-require_once('route.php');
-require_once('template.php');
+require('route.php');
+require('template.php');
 
 class PlaceApp {
 
@@ -34,7 +34,7 @@ class PlaceApp {
 
 	// Creates a new template and returns said template's processed output
 	function render_template($templateFile, $variables = '') {
-		$template = new Template($templateFile, $variables);
+		$template = new Template('templates/' . $templateFile, $variables);
 		return $template->output();
 	}
 
