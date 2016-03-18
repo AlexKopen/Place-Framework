@@ -39,12 +39,12 @@ class PlaceApp {
 	}
 
 	// Overwrites the default 404 server page with function set by the user
-	function notFound($output) {
+	function not_found($output) {
 		$this->notFoundOutput = $output();
 	}
 
 	// Returns the the user passed function if it exists, otherwise returns the default 404 server page
-	function notFoundOutput() {
+	function not_found_output() {
 		if (is_callable($this->notFoundOutput)){
 			return $this->notFoundOutput();
 		} else {
@@ -70,7 +70,7 @@ class PlaceApp {
 
 			// Route requested was not found
 			if ($i + 1 == $numTotalRoutes) {
-				$output = $this->notFoundOutput();
+				$output = $this->not_found_output();
 				break;
 			}
 		}

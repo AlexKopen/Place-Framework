@@ -19,7 +19,7 @@
 		return 'The /page route returned directly to the view';
 	});
 
-	$app->notFound(function() use($app) {
+	$app->not_found(function() use($app) {
 		$values = array(
 			'title' => 'Page Not Found'
 		);
